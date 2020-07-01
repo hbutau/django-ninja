@@ -5,32 +5,30 @@ from ninja import NinjaAPI
 from ninja.security import APIKeyQuery
 from client import NinjaAsyncClient
 
-api = NinjaAPI()
-
-
-class KeyQuery(APIKeyQuery):
-    def authenticate(self, request, key):
-        if key == "secret":
-            return key
-
-
-@api.get("/async", auth=KeyQuery())
-async def async_view(request, payload: int):
-    await asyncio.sleep(0)
-    return {"async": True}
-
-
-@api.post("/async")
-def sync_post_to_async_view(request):
-    return {"sync": True}
-
-
-client = NinjaAsyncClient(api)
-
 
 @pytest.mark.skipif(django.VERSION < (3, 1), reason="requires django 3.1 or higher")
 @pytest.mark.asyncio
 async def test_asyncio_operations():
+    api = NinjaAPI()
+
+    class KeyQuery(APIKeyQuery):
+        def authenticate(self, request, key):
+            if key == "secret":
+                return key
+
+    @api.get("/async", auth=KeyQuery())
+    async def async_view(request, payload: int):
+        await asyncio.sleep(0)
+        return {"async": True}
+
+    @api.post("/async")
+    def sync_post_to_async_view(request):
+        return {"sync": True}
+
+    client = NinjaAsyncClient(api)
+
+    # Actual tests --------------------------------------------------
+
     # without auth:
     res = await client.get("/async?payload=1")
     assert res.status_code == 401

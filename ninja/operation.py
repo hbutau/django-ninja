@@ -1,6 +1,7 @@
 import pydantic
-from typing import Callable, List, Any, Union, Optional, Sequence
+import django
 from django.http import HttpResponse, HttpResponseNotAllowed
+from typing import Callable, List, Any, Union, Optional, Sequence
 from ninja.responses import Response
 from ninja.errors import InvalidInput
 from ninja.constants import NOT_SET
@@ -75,6 +76,8 @@ class Operation:
 
 class AsyncOperation(Operation):
     def __init__(self, *args, **kwargs):
+        if django.VERSION < (3, 1):
+            raise Exception("Async operations are supported only with Django 3.1+")
         super().__init__(*args, **kwargs)
         self.is_async = True
 
@@ -87,7 +90,6 @@ class AsyncOperation(Operation):
         if errors:
             return Response({"detail": errors}, status=422)
         result = await self.view_func(request, **values)
-        print("result", result)
         return self._create_response(result)
 
 
