@@ -69,6 +69,10 @@ class OpenAPISchema(OrderedDict):
             if len(properties) == 1 and "definitions" in schema:
                 schema = list(schema["definitions"].values())[0]
 
+            from pprint import pprint
+
+            pprint(schema)  # debug for github action failure
+
             required = set(schema.get("required", []))
             for name, details in schema["properties"].items():
                 param = {"in": model._in, "name": name, "required": name in required}
